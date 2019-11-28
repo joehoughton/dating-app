@@ -5,12 +5,15 @@ using System.Threading.Tasks;
 using DatingApp.API.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Data.Entity;
+using System.Data;
+using Microsoft.EntityFrameworkCore.Sqlite;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DatingApp.API.Controllers
 {
+    // [Authorize] // TODO: Debug authorization and reapply attribute
     [Route("api/[controller]")]
-    public class ValuesController : Controller
+    public class ValuesController : ControllerBase
     {
         private readonly DataContext _context;
 
@@ -29,6 +32,7 @@ namespace DatingApp.API.Controllers
         }
 
         // GET api/values/5
+        [AllowAnonymous] // TODO: Debug authorization and test attribute
         [HttpGet("{id}")]
         public IActionResult GetValue(int id)
         {
