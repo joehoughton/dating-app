@@ -49,3 +49,7 @@ C:\s\DatingApp\DatingApp.API\obj\Debug\netcoreapp3.0\DatingApp.API.RazorTargetAs
 C:\s\DatingApp\DatingApp.API\obj\Debug\netcoreapp3.0\DatingApp.API.csproj.CopyComplete
 C:\s\DatingApp\DatingApp.API\obj\Debug\netcoreapp3.0\DatingApp.API.dll
 C:\s\DatingApp\DatingApp.API\obj\Debug\netcoreapp3.0\DatingApp.API.pdb
+C:\s\DatingApp\DatingApp.API\bin\Debug\netcoreapp3.0\Data\UserSeedData.json
+C:\s\DatingApp\DatingApp.API\bin\Debug\netcoreapp3.0\Microsoft.AspNetCore.JsonPatch.dll
+C:\s\DatingApp\DatingApp.API\bin\Debug\netcoreapp3.0\Microsoft.AspNetCore.Mvc.NewtonsoftJson.dll
+C:\s\DatingApp\DatingApp.API\bin\Debug\netcoreapp3.0\Newtonsoft.Json.Bson.dll
