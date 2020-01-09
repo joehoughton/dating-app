@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using DatingApp.API.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Data;
-using Microsoft.EntityFrameworkCore.Sqlite;
 using Microsoft.AspNetCore.Authorization;
 
 namespace DatingApp.API.Controllers
 {
-    // [Authorize] // TODO: Debug authorization and reapply attribute
+    [Authorize]
     [Route("api/[controller]")]
     public class ValuesController : ControllerBase
     {
@@ -32,7 +28,7 @@ namespace DatingApp.API.Controllers
         }
 
         // GET api/values/5
-        [AllowAnonymous] // TODO: Debug authorization and test attribute
+        [AllowAnonymous]
         [HttpGet("{id}")]
         public IActionResult GetValue(int id)
         {
