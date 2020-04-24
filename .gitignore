@@ -315,4 +315,5 @@ _ReSharper*/
 !.vscode/extensions.json
 *.code-workspace
 
+# Solution Files
 DatingApp.API\bin
