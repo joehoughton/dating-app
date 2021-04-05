@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.Http;
 using DatingApp.API.Helpers;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using DatingApp.API.SignalR;
+using System.Threading.Tasks;
 
 namespace DatingApp.API
 {
@@ -28,6 +30,7 @@ namespace DatingApp.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<PresenceTracker>();
             services.AddDbContext<DataContext>(x => x.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
             services.AddMvc(option => option.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
             services.AddCors();
@@ -47,8 +50,24 @@ namespace DatingApp.API
                             ValidateIssuer = false,
                             ValidateAudience = false
                         };
+
+                        options.Events = new JwtBearerEvents
+                        {
+                            OnMessageReceived = context => {
+                                var accessToken = context.Request.Query["access_token"];
+                                var path = context.HttpContext.Request.Path;
+
+                                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                                {
+                                    context.Token = accessToken;
+                                }
+
+                                return Task.CompletedTask;
+                            }
+                        };
                     });
             services.AddScoped<LogUserActivity>();
+            services.AddSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -76,8 +95,12 @@ namespace DatingApp.API
             
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyMethod().AllowAnyHeader());
-            app.UseMvc();      
+            app.UseRouting();
+            app.UseCors(x => x.WithOrigins(new string[] {"https://localhost:4200", "http://localhost:4200"}).AllowAnyMethod().AllowAnyHeader().AllowCredentials());
+            app.UseMvc();
+            app.UseEndpoints(endpoints => {
+                endpoints.MapHub<PresenceHub>("hubs/presence");
+            });
         }
     }
 }

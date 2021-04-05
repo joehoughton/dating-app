@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { AuthService } from './_services/auth.service';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { User } from './_models/user';
+import { PresenceService } from './_services/presence.service';
 
 @Component({
   selector: 'app-root',
@@ -11,7 +12,7 @@ import { User } from './_models/user';
 export class AppComponent implements OnInit {
   jwtHelper = new JwtHelperService();
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private presence: PresenceService) {}
 
   ngOnInit() { // invoked only once when the directive is instantiated
     const token = localStorage.getItem('token');
@@ -24,6 +25,7 @@ export class AppComponent implements OnInit {
     if (user) {
       this.authService.currentUser = user;
       this.authService.changeMemberPhoto(user.photoUrl);
+      this.presence.createHubConnection(this.authService.getToken());
     }
   }
 }

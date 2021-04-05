@@ -3,6 +3,7 @@ import { User } from 'src/app/_models/user';
 import { UserService } from 'src/app/_services/user.service';
 import { AlertifyService } from 'src/app/_services/alertify.service';
 import { AuthService } from 'src/app/_services/auth.service';
+import { PresenceService } from 'src/app/_services/presence.service';
 
 @Component({
   selector: 'app-member-card',
@@ -12,7 +13,7 @@ import { AuthService } from 'src/app/_services/auth.service';
 export class MemberCardComponent implements OnInit {
   @Input () user: User;
 
-  constructor(private authService: AuthService, private userService: UserService, private alertify: AlertifyService) { }
+  constructor(private authService: AuthService, private userService: UserService, private alertify: AlertifyService, public presence: PresenceService) { }
 
   ngOnInit() {}
 

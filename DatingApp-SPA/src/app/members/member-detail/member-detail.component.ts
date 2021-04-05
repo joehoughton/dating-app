@@ -6,6 +6,7 @@ import { ActivatedRoute } from '@angular/router';
 import { NgxGalleryAnimation, NgxGalleryOptions, NgxGalleryImage } from 'ngx-gallery';
 import { TabsetComponent } from 'ngx-bootstrap';
 import { AuthService } from 'src/app/_services/auth.service';
+import { PresenceService } from 'src/app/_services/presence.service';
 
 @Component({
   selector: 'app-member-detail',
@@ -18,7 +19,7 @@ export class MemberDetailComponent implements OnInit {
   galleryOptions: NgxGalleryOptions[];
   galleryImages: NgxGalleryImage[];
 
-  constructor(private authService: AuthService, private userService: UserService, private alertify: AlertifyService, private route: ActivatedRoute) { }
+  constructor(private authService: AuthService, private userService: UserService, private alertify: AlertifyService, private route: ActivatedRoute, public presence: PresenceService) { }
 
   ngOnInit() {
     // this.loadUser(); // No longer needed - data is now retrieved and passed from resolver
