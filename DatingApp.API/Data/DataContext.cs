@@ -12,6 +12,8 @@ namespace DatingApp.API.Data
         public DbSet<Photo> Photos { get; set; }
         public DbSet<Like> Likes { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<Group> Groups { get; set; }
+        public DbSet<Connection> Connections { get; set; }
 
         protected override void OnModelCreating (ModelBuilder builder) // primary key, combiation of LikerId and LikeeId
         {
@@ -36,7 +38,7 @@ namespace DatingApp.API.Data
 
             builder.Entity<Message>()
                 .HasOne(u => u.Recipient)
-                .WithMany(m => m.MessagesRecieved)
+                .WithMany(m => m.MessagesReceived)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

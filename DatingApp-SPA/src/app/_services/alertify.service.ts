@@ -17,18 +17,18 @@ constructor() { }
   }
 
   success(message: string) {
-    alertify.success(message);
+    return alertify.success(message);
   }
 
   error(message: string) {
-    alertify.error(message);
+    return alertify.error(message);
   }
 
   warning(message: string) {
-    alertify.warning(message);
+    return alertify.warning(message);
   }
 
   message(message: string) {
-    alertify.message(message);
+    return alertify.message(message);
   }
 }

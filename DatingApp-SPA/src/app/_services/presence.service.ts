@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { BehaviorSubject } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -13,7 +14,7 @@ export class PresenceService {
   private onlineUsersSource = new BehaviorSubject<string[]>([]);
   onlineUsers$ = this.onlineUsersSource.asObservable();
 
-  constructor(private alertify: AlertifyService) { }
+  constructor(private alertify: AlertifyService, private router: Router) { }
 
   createHubConnection(token: string) { // web sockets have no support for authentication header
     this.hubConnection = new HubConnectionBuilder()
@@ -39,6 +40,14 @@ export class PresenceService {
 
       this.hubConnection.on('GetOnlineUsers', (usernames: string[]) => {
         this.onlineUsersSource.next(usernames);
+      });
+
+      this.hubConnection.on('NewMessageReceived', ({id, knownAs}) => {
+        var alert = this.alertify.message(knownAs + ' has sent you a new message!');
+        alert.callback = (isClicked: boolean) => {
+          if (isClicked)
+            this.router.navigate(['members/' + id], { queryParams: { tab: "3"}});
+        }
       });
   }
 

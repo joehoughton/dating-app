@@ -33,7 +33,7 @@ namespace DatingApp.API.Controllers
             if (userId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
                 return Unauthorized();
 
-            var messageFromRepo = _repo.GetMessage(id);
+            var messageFromRepo = await _repo.GetMessage(id);
 
             if (messageFromRepo == null)
                 return NotFound();

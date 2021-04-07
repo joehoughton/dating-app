@@ -1,19 +1,48 @@
 import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, pipe } from 'rxjs';
+import { BehaviorSubject, Observable, pipe } from 'rxjs';
 import { User } from '../_models/user';
 import { PaginatedResult } from '../_models/pagination';
-import { map } from 'rxjs/operators';
+import { map, take } from 'rxjs/operators';
 import { Message } from '../_models/Message';
+import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
   baseUrl = environment.apiUrl;
+  hubUrl = environment.hubUrl;
+  private hubConnection: HubConnection;
+  private messageThreadSource = new BehaviorSubject<Message[]>([]);
+  messageThread$ = this.messageThreadSource.asObservable(); // $ signifies that it's an observable
 
   constructor(private http: HttpClient) { }
+
+  createHubConnection(token: string, recipientId: number)
+  {
+    this.hubConnection = new HubConnectionBuilder()
+    .withUrl(this.hubUrl + 'message?recipientId=' + recipientId.toString(), {
+      accessTokenFactory: () => token
+    })
+    .withAutomaticReconnect()
+    .build();
+
+    this.hubConnection.start().catch(error => console.log(error));
+
+    this.hubConnection.on('ReceiveMessageThread', messages => {
+      this.messageThreadSource.next(messages);
+    });
+
+    this.hubConnection.on('NewMessage', message => {
+      this.messageThread$.pipe(take(1)).subscribe(messages => {
+        let newMessages = [...messages]; // avoid mutating state
+        newMessages.unshift(message); // insert to start of array
+        this.messageThreadSource.next(newMessages);
+      })
+    });
+  }
 
   getUsers(page?, itemsPerPage?, userParams?, likesParam?): Observable<PaginatedResult<User[]>> {
     const paginatedResult: PaginatedResult<User[]> = new PaginatedResult<User[]>();
@@ -101,8 +130,14 @@ export class UserService {
     return this.http.get<Message[]>(this.baseUrl + 'users/' + id + '/messages/thread/' + recipientId);
   }
 
-  sendMessage(id: number, message: Message) {
+  // [Obsolete: "Replaced for SignalR MessageHub"]
+  /* sendMessage(id: number, message: Message) {
     return this.http.post(this.baseUrl + 'users/' + id + '/messages', message);
+  } */
+
+  async sendMessage(message: Message) {
+    return this.hubConnection.invoke('SendMessage', message)
+      .catch(error => console.log(error));
   }
 
   deleteMessage(id: number, userId: number) {
@@ -111,5 +146,10 @@ export class UserService {
 
   markAsRead(userId: number, messageId: number) {
     this.http.post(this.baseUrl + 'users/' + userId + '/messages/' + messageId + '/read', {}).subscribe();
+  }
+
+  stopHubConnection() {
+    if (this.hubConnection)
+      this.hubConnection.stop();
   }
 }

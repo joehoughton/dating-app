@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { User } from 'src/app/_models/user';
 import { UserService } from 'src/app/_services/user.service';
 import { AlertifyService } from 'src/app/_services/alertify.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { NgxGalleryAnimation, NgxGalleryOptions, NgxGalleryImage } from 'ngx-gallery';
 import { TabsetComponent } from 'ngx-bootstrap';
 import { AuthService } from 'src/app/_services/auth.service';
@@ -19,10 +19,16 @@ export class MemberDetailComponent implements OnInit {
   galleryOptions: NgxGalleryOptions[];
   galleryImages: NgxGalleryImage[];
 
-  constructor(private authService: AuthService, private userService: UserService, private alertify: AlertifyService, private route: ActivatedRoute, public presence: PresenceService) { }
+  constructor(private authService: AuthService, private userService: UserService,
+     private alertify: AlertifyService, private route: ActivatedRoute,
+     public presence: PresenceService, private router: Router) {
+      // fixes bug and makes sure messages are fetched when routing via NewMessageReceived
+      // whilst viewing messages for another user at the time of receiving a message
+      this.router.routeReuseStrategy.shouldReuseRoute = () => false;
+     }
 
   ngOnInit() {
-    // this.loadUser(); // No longer needed - data is now retrieved and passed from resolver
+    // this.loadUser(); // no longer needed, data is now retrieved and passed from resolver
     this.route.data.subscribe(data => {
       this.user = data['user'];
     });
@@ -67,7 +73,9 @@ export class MemberDetailComponent implements OnInit {
   }
 
   sendLike(id: number) {
-    this.userService.sendLike(this.authService.decodedToken.nameid, id).subscribe(data => {
+    this.userService
+    .sendLike(this.authService.decodedToken.nameid, id)
+    .subscribe(data => {
       this.alertify.success('You have liked ' + this.user.knownAs);
     }, error => {
       this.alertify.error(error);

@@ -12,7 +12,7 @@ import { Router } from '@angular/router';
   styleUrls: ['./register.component.css']
 })
 export class RegisterComponent implements OnInit {
-  @Input () valuesFromHome: any; // input property allows us to recieve data from the parent to child
+  @Input () valuesFromHome: any; // input property allows us to receive data from the parent to child
   @Output() cancelRegister = new EventEmitter(); // output properties emit events, it allows us to pass data from child to parent
   user: User;
   model: any = {};

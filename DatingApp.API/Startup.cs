@@ -94,12 +94,13 @@ namespace DatingApp.API
             }
             
             app.UseAuthentication();
-            app.UseAuthorization();
             app.UseRouting();
-            app.UseCors(x => x.WithOrigins(new string[] {"https://localhost:4200", "http://localhost:4200"}).AllowAnyMethod().AllowAnyHeader().AllowCredentials());
+            app.UseAuthorization();
+            app.UseCors(x => x.WithOrigins(new string[] {"http://localhost:4200"}).AllowAnyMethod().AllowAnyHeader().AllowCredentials());
             app.UseMvc();
             app.UseEndpoints(endpoints => {
                 endpoints.MapHub<PresenceHub>("hubs/presence");
+                endpoints.MapHub<MessageHub>("hubs/message");
             });
         }
     }
