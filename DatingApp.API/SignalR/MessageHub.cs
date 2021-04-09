@@ -35,20 +35,23 @@ namespace DatingApp.API.SignalR
             var httpContect = Context.GetHttpContext();
             var recipientId = int.Parse(httpContect.Request.Query["recipientId"].ToString());
             var otherUser = await _repo.GetUser(recipientId);
+
             var groupName = GetGroupName(Context.User.GetUsername(), otherUser.Username);
             await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
-            await AddToGroup(Context, groupName);
+
+            var group = await AddToGroup(groupName);
+            await Clients.Group(groupName).SendAsync("UpdatedGroup", group); // if group is empty, SignalR doesn't send
 
             var messageFromRepo = await _repo.GetMessageThread(Context.User.GetUserId(), recipientId);
-
             var messageThread = _mapper.Map<IEnumerable<MessageToReturnDto>>(messageFromRepo);
 
-            await Clients.Group(groupName).SendAsync("ReceiveMessageThread", messageThread);
+            await Clients.Caller.SendAsync("ReceiveMessageThread", messageThread);
         }
 
         public override async Task OnDisconnectedAsync(Exception exception) // TODO: Remove rest of connections?
         {
-            await RemoveFromMessageGroup(Context.ConnectionId);
+            var group = await RemoveFromMessageGroup();
+            await Clients.Group(group.Name).SendAsync("UpdatedGroup", group);
             await base.OnDisconnectedAsync(exception);
         }
 
@@ -104,7 +107,7 @@ namespace DatingApp.API.SignalR
         /// <summary>
         /// HubCallerContext gives us access to current user name and connection id
         /// </summary>
-        private async Task<bool> AddToGroup(HubCallerContext context, string groupName)
+        private async Task<Group> AddToGroup(string groupName)
         {
             var group = await _repo.GetMessageGroup(groupName);
             var connection = new Connection(Context.ConnectionId, Context.User.GetUsername());
@@ -117,14 +120,20 @@ namespace DatingApp.API.SignalR
 
             group.Connections.Add(connection);
 
-            return await _repo.SaveAll();
+            if (await _repo.SaveAll()) return group;
+
+            throw new HubException("Failed to join group");
         }
 
-        private async Task RemoveFromMessageGroup(string connectionId)
+        private async Task<Group> RemoveFromMessageGroup()
         {
-            var connection = await _repo.GetConnection(connectionId);
+            var group = await _repo.GetGroupForConnection(Context.ConnectionId);
+            var connection = group.Connections.FirstOrDefault(x => x.ConnectionId == Context.ConnectionId);
             _repo.RemoveConnection(connection);
-            await _repo.SaveAll();
+
+            if (await _repo.SaveAll()) return group;
+
+            throw new HubException("Failed to remove from group");
         }
     }
 }

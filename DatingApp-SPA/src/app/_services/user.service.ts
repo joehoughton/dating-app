@@ -5,8 +5,10 @@ import { BehaviorSubject, Observable, pipe } from 'rxjs';
 import { User } from '../_models/user';
 import { PaginatedResult } from '../_models/pagination';
 import { map, take } from 'rxjs/operators';
-import { Message } from '../_models/Message';
+import { Message } from '../_models/message';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
+import { group } from '@angular/animations';
+import { Group } from '../_models/group';
 
 @Injectable({
   providedIn: 'root'
@@ -42,6 +44,20 @@ export class UserService {
         this.messageThreadSource.next(newMessages);
       })
     });
+
+    this.hubConnection.on('UpdatedGroup', (group: Group) => {
+      if (group.connections.some(x => x.userId === recipientId)) {
+        this.messageThread$.pipe(take(1)).subscribe(messages => {
+          messages.forEach(message => {
+            if (!message.dateRead)
+            {
+              message.dateRead = new Date(Date.now())
+            }
+          })
+          this.messageThreadSource.next([...messages]);
+        })
+      }
+    })
   }
 
   getUsers(page?, itemsPerPage?, userParams?, likesParam?): Observable<PaginatedResult<User[]>> {

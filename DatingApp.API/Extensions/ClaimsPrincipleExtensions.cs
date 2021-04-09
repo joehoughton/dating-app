@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using DatingApp.API.Helpers;
 
 namespace DatingApp.API.Extensions
 {
@@ -6,7 +7,7 @@ namespace DatingApp.API.Extensions
     {
         public static string GetUsername(this ClaimsPrincipal user)
         {
-            return user.FindFirst(ClaimTypes.Name)?.Value;
+            return user.FindFirst(ClaimTypes.Name)?.Value.FirstCharToUpper();
         }
         
         public static int GetUserId(this ClaimsPrincipal user)
