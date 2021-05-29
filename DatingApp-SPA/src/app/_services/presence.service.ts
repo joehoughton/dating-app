@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { BehaviorSubject } from 'rxjs';
+import { take } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { AlertifyService } from './alertify.service';
 
@@ -31,11 +32,15 @@ export class PresenceService {
         });
 
       this.hubConnection.on('UserIsOnline', username => {
-        this.alertify.message(username + ' has connected');
+        this.onlineUsers$.pipe(take(1)).subscribe(usernames => {
+          this.onlineUsersSource.next([...usernames, username]);
+        })
       });
 
       this.hubConnection.on('UserIsOffline', username => {
-        this.alertify.message(username + ' has disconnected');
+        this.onlineUsers$.pipe(take(1)).subscribe(usernames => {
+          this.onlineUsersSource.next([...usernames.filter(x => x !== username)]);
+        })
       });
 
       this.hubConnection.on('GetOnlineUsers', (usernames: string[]) => {

@@ -37,7 +37,7 @@ namespace DatingApp.API.SignalR
             var otherUser = await _repo.GetUser(recipientId);
             var groupName = GetGroupName(Context.User.GetUsername(), otherUser.Username);
             await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
-            await AddToGroup(Context, groupName);
+            await AddToGroup(groupName);
 
             var messageFromRepo = await _repo.GetMessageThread(Context.User.GetUserId(), recipientId);
 
@@ -46,9 +46,9 @@ namespace DatingApp.API.SignalR
             await Clients.Group(groupName).SendAsync("ReceiveMessageThread", messageThread);
         }
 
-        public override async Task OnDisconnectedAsync(Exception exception) // TODO: Remove rest of connections?
+        public override async Task OnDisconnectedAsync(Exception exception)
         {
-            await RemoveFromMessageGroup(Context.ConnectionId);
+            await RemoveFromMessageGroup();
             await base.OnDisconnectedAsync(exception);
         }
 
@@ -104,7 +104,7 @@ namespace DatingApp.API.SignalR
         /// <summary>
         /// HubCallerContext gives us access to current user name and connection id
         /// </summary>
-        private async Task<bool> AddToGroup(HubCallerContext context, string groupName)
+        private async Task<Group> AddToGroup(string groupName)
         {
             var group = await _repo.GetMessageGroup(groupName);
             var connection = new Connection(Context.ConnectionId, Context.User.GetUsername());
@@ -117,12 +117,14 @@ namespace DatingApp.API.SignalR
 
             group.Connections.Add(connection);
 
-            return await _repo.SaveAll();
+            if (await _repo.SaveAll()) return group;
+
+            throw new HubException("Failed to join group");
         }
 
-        private async Task RemoveFromMessageGroup(string connectionId)
+        private async Task RemoveFromMessageGroup()
         {
-            var connection = await _repo.GetConnection(connectionId);
+            var connection = await _repo.GetConnection(Context.ConnectionId);
             _repo.RemoveConnection(connection);
             await _repo.SaveAll();
         }
