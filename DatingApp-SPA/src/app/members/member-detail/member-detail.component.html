@@ -8,7 +8,7 @@
       <div class="card">
         <img class="card-img-top img-thumbnail" src="{{user.photoUrl || '../../../assets/user.png'}}" alt="{{user.knownAs}}">
         <div class="card-body">
-          <div class="mb-2" *ngIf="(presence.onlineUsers$ | async).includes(user.username)">
+          <div class="mb-2" *ngIf="(presence.onlineUsers$ | async).includes(user.username.toLowerCase())">
             <i class="fa fa-user text-success"></i> Online Now
           </div>
           <div>

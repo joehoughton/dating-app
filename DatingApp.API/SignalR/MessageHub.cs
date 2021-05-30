@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoMapper;
 using DatingApp.API.Data;
@@ -37,18 +36,19 @@ namespace DatingApp.API.SignalR
             var otherUser = await _repo.GetUser(recipientId);
             var groupName = GetGroupName(Context.User.GetUsername(), otherUser.Username);
             await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
-            await AddToGroup(groupName);
-
+            var group = await AddToGroup(groupName);
+            await Clients.Group(groupName).SendAsync("UpdatedGroup", group);
             var messageFromRepo = await _repo.GetMessageThread(Context.User.GetUserId(), recipientId);
 
             var messageThread = _mapper.Map<IEnumerable<MessageToReturnDto>>(messageFromRepo);
 
-            await Clients.Group(groupName).SendAsync("ReceiveMessageThread", messageThread);
+            await Clients.Caller.SendAsync("ReceiveMessageThread", messageThread);
         }
 
         public override async Task OnDisconnectedAsync(Exception exception)
         {
-            await RemoveFromMessageGroup();
+            var group = await RemoveFromMessageGroup();
+            await Clients.Group(group.Name).SendAsync("UpdatedGroup", group);
             await base.OnDisconnectedAsync(exception);
         }
 
@@ -107,7 +107,7 @@ namespace DatingApp.API.SignalR
         private async Task<Group> AddToGroup(string groupName)
         {
             var group = await _repo.GetMessageGroup(groupName);
-            var connection = new Connection(Context.ConnectionId, Context.User.GetUsername());
+            var connection = new Connection(Context.ConnectionId, Context.User.GetUsername(), Context.User.GetUserId());
 
             if (group == null)
             {
@@ -122,11 +122,15 @@ namespace DatingApp.API.SignalR
             throw new HubException("Failed to join group");
         }
 
-        private async Task RemoveFromMessageGroup()
+        private async Task<Group> RemoveFromMessageGroup()
         {
-            var connection = await _repo.GetConnection(Context.ConnectionId);
+            var group = await _repo.GetGroupForConnection(Context.ConnectionId);
+            var connection = group.Connections.FirstOrDefault(x => x.ConnectionId == Context.ConnectionId);
+
             _repo.RemoveConnection(connection);
-            await _repo.SaveAll();
+            if (await _repo.SaveAll()) return group;
+
+            throw new HubException("Failed to remove from group");
         }
     }
 }

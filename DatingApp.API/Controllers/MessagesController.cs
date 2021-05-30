@@ -133,7 +133,7 @@ namespace DatingApp.API.Controllers
                 return Unauthorized();
 
             message.IsRead = true;
-            message.DateRead = DateTime.Now;
+            message.DateRead = DateTime.UtcNow;
 
             await _repo.SaveAll();
 
